@@ -1,3 +1,6 @@
+# https://www.cotter.app/
+# An example of how to use Cotter's access keys
+
 import functools
 import requests
 import jwcrypto.jwk
