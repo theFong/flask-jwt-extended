@@ -6,6 +6,7 @@ import jwt
 from werkzeug.security import safe_str_cmp
 
 from flask_jwt_extended.exceptions import JWTDecodeError, CSRFError
+# from flask_jwt_extended import utils
 
 
 def _create_csrf_token():
@@ -118,7 +119,7 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims
 
 def decode_jwt(encoded_token, secret, algorithms, identity_claim_key,
                user_claims_key, csrf_value=None, audience=None,
-               leeway=0, allow_expired=False, issuer=None):
+               leeway=0, allow_expired=False, issuer=None, token_loader=None):
     """
     Decodes an encoded JWT
 
@@ -141,6 +142,9 @@ def decode_jwt(encoded_token, secret, algorithms, identity_claim_key,
     # This call verifies the ext, iat, nbf, and aud claims
     data = jwt.decode(encoded_token, secret, algorithms=algorithms, audience=audience,
                       leeway=leeway, options=options, issuer=issuer)
+
+    if token_loader is not None:
+        data = token_loader(data)
 
     # Make sure that any custom claims we expect in the token are present
     if 'jti' not in data:

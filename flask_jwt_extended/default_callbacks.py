@@ -128,3 +128,9 @@ def default_encode_key_callback(identity):
     JWT_PRIVATE_KEY settings will be used to encode all tokens
     """
     return config.encode_key
+
+def default_token_loader(token):
+    """
+    By default, no processing is applied after the token is decoded 
+    """
+    return token

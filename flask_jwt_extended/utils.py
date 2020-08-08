@@ -115,7 +115,8 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
             audience=config.audience,
             issuer=config.decode_issuer,
             leeway=config.leeway,
-            allow_expired=allow_expired
+            allow_expired=allow_expired, 
+            token_loader=token_loader
         )
     except ExpiredSignatureError:
         expired_token = decode_jwt(
@@ -128,7 +129,8 @@ def decode_token(encoded_token, csrf_value=None, allow_expired=False):
             audience=config.audience,
             issuer=config.decode_issuer,
             leeway=config.leeway,
-            allow_expired=True
+            allow_expired=True,
+            token_loader=token_loader
         )
         ctx_stack.top.expired_jwt = expired_token
         raise
@@ -197,6 +199,11 @@ def create_refresh_token(identity, expires_delta=None, user_claims=None,
     jwt_manager = _get_jwt_manager()
     return jwt_manager._create_refresh_token(identity, expires_delta, user_claims,
                                              headers=headers)
+
+
+def token_loader(*args, **kwargs):
+    jwt_manager = _get_jwt_manager()
+    return jwt_manager._token_loader(*args, **kwargs)
 
 
 def has_user_loader():

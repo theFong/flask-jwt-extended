@@ -317,3 +317,19 @@ def test_jwt_headers(app):
         refresh_token = create_refresh_token('username', headers=jwt_header)
         assert get_unverified_jwt_headers(access_token)["foo"] == "bar"
         assert get_unverified_jwt_headers(refresh_token)["foo"] == "bar"
+
+def test_custom_token_loader(app):
+    jwtM = get_jwt_manager(app)
+    app.config['JWT_SECRET_KEY'] = 'foobarbaz'
+
+    @jwtM.token_loader
+    def token_loader(token):
+        token["new_field"] = "hello"
+        return token
+
+    with app.test_request_context():
+        token = create_access_token('username')
+        token = decode_token(token)
+
+    assert "new_field" in token
+    assert token["new_field"] == "hello"
