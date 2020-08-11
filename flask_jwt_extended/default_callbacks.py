@@ -134,3 +134,15 @@ def default_post_decode_token_loader(token):
     By default, no processing is applied after the token is decoded 
     """
     return token
+
+def default_pre_encode_access_token_loader(token):
+    """
+    By default, no processing is applied before the access token is encoded 
+    """
+    return token
+
+def default_pre_encode_refresh_token_loader(token):
+    """
+    By default, no processing is applied before the refresh token is encoded 
+    """
+    return token

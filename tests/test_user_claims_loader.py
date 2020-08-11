@@ -179,32 +179,64 @@ def test_user_claims_in_access_token_specified_at_creation_override(app):
 def test_pre_encode_access_token_loader(app):
     jwt = get_jwt_manager(app)
 
-    custom_aud = "my custom aud"
+    custom_claim = "my custom"
 
     @jwt.pre_encode_access_token_loader
     def pre_encode(data):
-        data["cust"] = custom_aud
+        data["cust"] = custom_claim
         return data
 
     with app.test_request_context():
         access_token = create_access_token('username')
 
         decoded_token = decode_token(access_token)
-        assert decoded_token['cust'] == custom_aud
+        assert decoded_token['cust'] == custom_claim
 
 
 def test_pre_encode_refresh_token_loader(app):
     jwt = get_jwt_manager(app)
 
-    custom_aud = "my custom aud"
+    custom_claim = "my custom"
 
     @jwt.pre_encode_refresh_token_loader
     def pre_encode(data):
-        data["cust"] = custom_aud
+        data["cust"] = custom_claim
         return data
 
     with app.test_request_context():
         refresh_token = create_refresh_token('username')
 
         decoded_token = decode_token(refresh_token)
-        assert decoded_token['cust'] == custom_aud
+        assert decoded_token['cust'] == custom_claim
+
+def test_claims_overload_access(app):
+    jwt = get_jwt_manager(app)
+
+    custom_claim = "my custom claim"
+
+    @jwt.pre_encode_refresh_token_loader
+    def pre_encode(data):
+        data["cust"] = "before claim"
+        return data
+
+    with app.test_request_context():
+        refresh_token = create_access_token('username', claims_overload_payload={"cust": custom_claim})
+
+        decoded_token = decode_token(refresh_token)
+        assert decoded_token['cust'] == custom_claim
+
+def test_claims_overload_refresh(app):
+    jwt = get_jwt_manager(app)
+
+    custom_claim = "my custom claim"
+
+    @jwt.pre_encode_refresh_token_loader
+    def pre_encode(data):
+        data["cust"] = "before claim"
+        return data
+
+    with app.test_request_context():
+        refresh_token = create_refresh_token('username', claims_overload_payload={"cust": custom_claim})
+
+        decoded_token = decode_token(refresh_token)
+        assert decoded_token['cust'] == custom_claim

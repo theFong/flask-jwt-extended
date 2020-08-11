@@ -24,11 +24,12 @@ from flask_jwt_extended.default_callbacks import (
     default_revoked_token_callback, default_user_loader_error_callback,
     default_claims_verification_callback, default_verify_claims_failed_callback,
     default_decode_key_callback, default_encode_key_callback,
-    default_jwt_headers_callback, default_post_decode_token_loader)
+    default_jwt_headers_callback, default_post_decode_token_loader,
+    default_pre_encode_access_token_loader, default_pre_encode_refresh_token_loader)
 from flask_jwt_extended.tokens import (
     encode_refresh_token, encode_access_token
 )
-from flask_jwt_extended.utils import get_jwt_identity
+from flask_jwt_extended.utils import get_jwt_identity, get_payload_loader_overloader
 
 
 class JWTManager(object):
@@ -59,8 +60,8 @@ class JWTManager(object):
         self._needs_fresh_token_callback = default_needs_fresh_token_callback
         self._revoked_token_callback = default_revoked_token_callback
         self._post_decode_token_loader = default_post_decode_token_loader
-        self._pre_encode_access_token_loader = None
-        self._pre_encode_refresh_token_loader = None
+        self._pre_encode_access_token_loader = default_pre_encode_access_token_loader
+        self._pre_encode_refresh_token_loader = default_pre_encode_refresh_token_loader
         self._user_loader_callback = None
         self._user_loader_error_callback = default_user_loader_error_callback
         self._token_in_blacklist_callback = None
@@ -499,7 +500,7 @@ class JWTManager(object):
         self._pre_encode_refresh_token_loader = callback
 
     def _create_refresh_token(self, identity, expires_delta=None, user_claims=None,
-                              headers=None):
+                              headers=None, claims_overload_payload=None):
         if expires_delta is None:
             expires_delta = config.refresh_expires
 
@@ -508,6 +509,11 @@ class JWTManager(object):
 
         if headers is None:
             headers = self._jwt_additional_header_callback(identity)
+
+        pre_encode_token_loader = self._pre_encode_refresh_token_loader
+        if claims_overload_payload is not None:
+            pre_encode_token_loader = get_payload_loader_overloader(claims_overload_payload, pre_encode_token_loader)
+
 
         refresh_token = encode_refresh_token(
             identity=self._user_identity_callback(identity),
@@ -520,12 +526,12 @@ class JWTManager(object):
             user_claims_key=config.user_claims_key,
             json_encoder=config.json_encoder,
             headers=headers,
-            pre_encode_loader=self._pre_encode_refresh_token_loader
+            pre_encode_loader=pre_encode_token_loader
         )
         return refresh_token
 
     def _create_access_token(self, identity, fresh=False, expires_delta=None,
-                             user_claims=None, headers=None):
+                             user_claims=None, headers=None, claims_overload_payload=None):
         if expires_delta is None:
             expires_delta = config.access_expires
 
@@ -534,6 +540,11 @@ class JWTManager(object):
 
         if headers is None:
             headers = self._jwt_additional_header_callback(identity)
+        
+        pre_encode_token_loader = self._pre_encode_access_token_loader
+        if claims_overload_payload is not None:
+            pre_encode_token_loader = get_payload_loader_overloader(claims_overload_payload, pre_encode_token_loader)
+
 
         access_token = encode_access_token(
             identity=self._user_identity_callback(identity),
@@ -548,6 +559,6 @@ class JWTManager(object):
             json_encoder=config.json_encoder,
             headers=headers,
             issuer=config.encode_issuer,
-            pre_encode_loader=self._pre_encode_access_token_loader
+            pre_encode_loader=pre_encode_token_loader
         )
         return access_token

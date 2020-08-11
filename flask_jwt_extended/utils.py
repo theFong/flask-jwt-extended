@@ -145,7 +145,7 @@ def _get_jwt_manager():
 
 
 def create_access_token(identity, fresh=False, expires_delta=None, user_claims=None,
-                        headers=None):
+                        headers=None, claims_overload_payload=None):
     """
     Create a new access token.
 
@@ -168,15 +168,17 @@ def create_access_token(identity, fresh=False, expires_delta=None, user_claims=N
     :param user_claims: Optional JSON serializable to override user claims.
     :param headers: Optional, valid dict for specifying additional headers in JWT
                     header section
+    :param claims_overload_payload: Claims dictionary that allows you to overload the token payload.
+                             WARNING: you have the potential to overwrite required token payload fields
     :return: An encoded access token
     """
     jwt_manager = _get_jwt_manager()
     return jwt_manager._create_access_token(identity, fresh, expires_delta, user_claims,
-                                            headers=headers)
+                                            headers=headers, claims_overload_payload=claims_overload_payload)
 
 
 def create_refresh_token(identity, expires_delta=None, user_claims=None,
-                         headers=None):
+                         headers=None, claims_overload_payload=None):
     """
     Creates a new refresh token.
 
@@ -194,11 +196,13 @@ def create_refresh_token(identity, expires_delta=None, user_claims=None,
     :param user_claims: Optional JSON serializable to override user claims.
     :param headers: Optional, valid dict for specifying additional headers in JWT
                     header section
+    :param claims_overload_payload: Claims dictionary that allows you to overload the token payload.
+                             WARNING: you have the potential to overwrite required token payload fields
     :return: An encoded refresh token
     """
     jwt_manager = _get_jwt_manager()
     return jwt_manager._create_refresh_token(identity, expires_delta, user_claims,
-                                             headers=headers)
+                                             headers=headers, claims_overload_payload=claims_overload_payload)
 
 
 def post_decode_loader(*args, **kwargs):
@@ -433,3 +437,11 @@ def get_unverified_jwt_headers(encoded_token):
     :return: JWT header parameters as python dict()
     """
     return jwt.get_unverified_header(encoded_token)
+
+def get_payload_loader_overloader(overload_payload, token_loader):
+    def wrapper(payload):
+        payload = token_loader(payload)
+        for k,v in overload_payload.items():
+            payload[k] = v
+        return payload
+    return wrapper
