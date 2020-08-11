@@ -24,7 +24,7 @@ from flask_jwt_extended.default_callbacks import (
     default_revoked_token_callback, default_user_loader_error_callback,
     default_claims_verification_callback, default_verify_claims_failed_callback,
     default_decode_key_callback, default_encode_key_callback,
-    default_jwt_headers_callback, default_token_loader)
+    default_jwt_headers_callback, default_post_decode_token_loader)
 from flask_jwt_extended.tokens import (
     encode_refresh_token, encode_access_token
 )
@@ -58,7 +58,9 @@ class JWTManager(object):
         self._unauthorized_callback = default_unauthorized_callback
         self._needs_fresh_token_callback = default_needs_fresh_token_callback
         self._revoked_token_callback = default_revoked_token_callback
-        self._token_loader = default_token_loader
+        self._post_decode_token_loader = default_post_decode_token_loader
+        self._pre_encode_access_token_loader = None
+        self._pre_encode_refresh_token_loader = None
         self._user_loader_callback = None
         self._user_loader_error_callback = default_user_loader_error_callback
         self._token_in_blacklist_callback = None
@@ -474,13 +476,27 @@ class JWTManager(object):
         self._jwt_additional_header_callback = callback
         return callback
     
-    def token_loader(self, callback):
+    def post_decode_token_loader(self, callback):
         """
         This decorator sets the callback function for processing the token after it
         has been validated and decoded. It is called before identity loader and claims
-        loader is called. The raw token is passed in as an object and must be returned.
+        loader is called. The raw token payload is passed in as an object and must be returned.
         """
-        self._token_loader = callback
+        self._post_decode_token_loader = callback
+
+    def pre_encode_access_token_loader(self, callback):
+        """
+        This decorator sets the callback function for processing the access token before
+        the payload has been created. The raw token payload is passed in as an object and must be returned.
+        """
+        self._pre_encode_access_token_loader = callback
+
+    def pre_encode_refresh_token_loader(self, callback):
+        """
+        This decorator sets the callback function for processing the refresh token before
+        the payload has been created. The raw token payload is passed in as an object and must be returned.
+        """
+        self._pre_encode_refresh_token_loader = callback
 
     def _create_refresh_token(self, identity, expires_delta=None, user_claims=None,
                               headers=None):
@@ -503,7 +519,8 @@ class JWTManager(object):
             identity_claim_key=config.identity_claim_key,
             user_claims_key=config.user_claims_key,
             json_encoder=config.json_encoder,
-            headers=headers
+            headers=headers,
+            pre_encode_loader=self._pre_encode_refresh_token_loader
         )
         return refresh_token
 
@@ -531,5 +548,6 @@ class JWTManager(object):
             json_encoder=config.json_encoder,
             headers=headers,
             issuer=config.encode_issuer,
+            pre_encode_loader=self._pre_encode_access_token_loader
         )
         return access_token

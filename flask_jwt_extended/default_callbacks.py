@@ -129,7 +129,7 @@ def default_encode_key_callback(identity):
     """
     return config.encode_key
 
-def default_token_loader(token):
+def default_post_decode_token_loader(token):
     """
     By default, no processing is applied after the token is decoded 
     """

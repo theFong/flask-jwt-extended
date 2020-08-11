@@ -20,7 +20,9 @@ Configuring Flask-JWT-Extended
   .. automethod:: invalid_token_loader
   .. automethod:: needs_fresh_token_loader
   .. automethod:: revoked_token_loader
-  .. automethod:: token_loader
+  .. automethod:: post_decode_token_loader
+  .. automethod:: pre_encode_access_token_loader
+  .. automethod:: pre_encode_refresh_token_loader
   .. automethod:: token_in_blacklist_loader
   .. automethod:: unauthorized_loader
   .. automethod:: user_claims_loader

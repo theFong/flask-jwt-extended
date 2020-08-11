@@ -175,3 +175,36 @@ def test_user_claims_in_access_token_specified_at_creation_override(app):
     response = test_client.get('/protected', headers=make_headers(access_token))
     assert response.get_json() == {'foo': 'bar'}
     assert response.status_code == 200
+
+def test_pre_encode_access_token_loader(app):
+    jwt = get_jwt_manager(app)
+
+    custom_aud = "my custom aud"
+
+    @jwt.pre_encode_access_token_loader
+    def pre_encode(data):
+        data["cust"] = custom_aud
+        return data
+
+    with app.test_request_context():
+        access_token = create_access_token('username')
+
+        decoded_token = decode_token(access_token)
+        assert decoded_token['cust'] == custom_aud
+
+
+def test_pre_encode_refresh_token_loader(app):
+    jwt = get_jwt_manager(app)
+
+    custom_aud = "my custom aud"
+
+    @jwt.pre_encode_refresh_token_loader
+    def pre_encode(data):
+        data["cust"] = custom_aud
+        return data
+
+    with app.test_request_context():
+        refresh_token = create_refresh_token('username')
+
+        decoded_token = decode_token(refresh_token)
+        assert decoded_token['cust'] == custom_aud

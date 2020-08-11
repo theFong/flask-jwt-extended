@@ -34,7 +34,7 @@ def _encode_jwt(additional_token_data, expires_delta, secret, algorithm,
 
 def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
                         user_claims, csrf, identity_claim_key, user_claims_key,
-                        json_encoder=None, headers=None, issuer=None):
+                        json_encoder=None, headers=None, issuer=None, pre_encode_loader=None):
     """
     Creates a new encoded (utf-8) access token.
 
@@ -77,13 +77,17 @@ def encode_access_token(identity, secret, algorithm, expires_delta, fresh,
         token_data['csrf'] = _create_csrf_token()
     if issuer is not None:
         token_data['iss'] = issuer
+
+    if pre_encode_loader is not None:
+        token_data = pre_encode_loader(token_data)
+
     return _encode_jwt(token_data, expires_delta, secret, algorithm,
                        json_encoder=json_encoder, headers=headers)
 
 
 def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims,
                          csrf, identity_claim_key, user_claims_key,
-                         json_encoder=None, headers=None):
+                         json_encoder=None, headers=None, pre_encode_loader=None):
     """
     Creates a new encoded (utf-8) refresh token.
 
@@ -113,13 +117,17 @@ def encode_refresh_token(identity, secret, algorithm, expires_delta, user_claims
 
     if csrf:
         token_data['csrf'] = _create_csrf_token()
+    
+    if pre_encode_loader is not None:
+        token_data = pre_encode_loader(token_data)
+
     return _encode_jwt(token_data, expires_delta, secret, algorithm,
                        json_encoder=json_encoder, headers=headers)
 
 
 def decode_jwt(encoded_token, secret, algorithms, identity_claim_key,
                user_claims_key, csrf_value=None, audience=None,
-               leeway=0, allow_expired=False, issuer=None, token_loader=None):
+               leeway=0, allow_expired=False, issuer=None, post_decode_loader=None):
     """
     Decodes an encoded JWT
 
@@ -143,8 +151,8 @@ def decode_jwt(encoded_token, secret, algorithms, identity_claim_key,
     data = jwt.decode(encoded_token, secret, algorithms=algorithms, audience=audience,
                       leeway=leeway, options=options, issuer=issuer)
 
-    if token_loader is not None:
-        data = token_loader(data)
+    if post_decode_loader is not None:
+        data = post_decode_loader(data)
 
     # Make sure that any custom claims we expect in the token are present
     if 'jti' not in data:

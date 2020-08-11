@@ -322,7 +322,7 @@ def test_custom_token_loader(app):
     jwtM = get_jwt_manager(app)
     app.config['JWT_SECRET_KEY'] = 'foobarbaz'
 
-    @jwtM.token_loader
+    @jwtM.post_decode_token_loader
     def token_loader(token):
         token["new_field"] = "hello"
         return token

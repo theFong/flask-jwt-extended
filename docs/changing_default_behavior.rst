@@ -37,8 +37,12 @@ and what the return values of your callback functions need to be.
       - Function to call when an invalid token accesses a protected endpoint
     * - :meth:`~flask_jwt_extended.JWTManager.needs_fresh_token_loader`
       - Function to call when a non-fresh token accesses a :func:`~flask_jwt_extended.fresh_jwt_required` endpoint
-    * - :meth:`~flask_jwt_extended.JWTManager.token_loader`
+    * - :meth:`~flask_jwt_extended.JWTManager.post_decode_token_loader`
       - Function to call in order to post process decoded token for rest of plugin to consume
+    * - :meth:`~flask_jwt_extended.JWTManager.pre_encode_access_token_loader`
+      - Function to call in order to pre process access token to be encoded
+    * - :meth:`~flask_jwt_extended.JWTManager.pre_encode_refresh_token_loader`
+      - Function to call in order to pre process refresh token to be encoded
     * - :meth:`~flask_jwt_extended.JWTManager.revoked_token_loader`
       - Function to call when a revoked token accesses a protected endpoint
     * - :meth:`~flask_jwt_extended.JWTManager.token_in_blacklist_loader`
